@@ -1,0 +1,23 @@
+{
+  "name": "vocabio-server",
+  "version": "1.0.0",
+  "main": "server.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "nodemon --watch ./server.js"
+  },
+  "dependencies": {
+    "apollo-server-core": "^3.10.2",
+    "apollo-server-express": "^3.10.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.1",
+    "express-graphql": "^0.12.0",
+    "graphql": "^16.6.0",
+    "helmet": "^6.0.0",
+    "mongoose": "^6.6.3",
+    "nodemon": "^2.0.20"
+  },
+  "devDependencies": {
+    "morgan": "^1.10.0"
+  }
+}
