@@ -13,6 +13,9 @@ import {
 } from './redux/slice/modalSlice';
 
 import React, { useEffect } from 'react';
+import PrivateRoute from './_components/common/PrivateRoute/PrivateRoute';
+import ConfirmModal from './_components/common/modal/ConfirmModal';
+import { selectConfirmModalState } from './redux/slice/confirmModalSlice';
 const ExploreScreen = React.lazy(
   () => import('./screens/explore/ExploreScreen')
 );
@@ -20,33 +23,26 @@ const SentenceWithWordForm = React.lazy(
   () => import('./_components/form/SentenceWithWordForm')
 );
 const HomeScreen = React.lazy(() => import('./screens/home/HomeScreen'));
-const GET_LOCATION = gql`
-  query getLocation {
-    locations {
-      id
-      name
-      description
 
-      photo
-    }
-  }
-`;
 export default function App() {
   const modalOpenState = useSelector(modalStateSelector);
   const modalComponentName = useSelector(modalComponentNameSelector);
-  const { loading, error, data } = useQuery(GET_LOCATION);
-  useEffect(() => {
-    console.log(data);
-  }, [data]);
-
+  const confirmModalState = useSelector(selectConfirmModalState);
+  const confirmModalAction = useSelector(
+    (state: any) => state.confirmModal.confirmButtonHandler
+  );
   return (
     <>
       <Router>
         <Routes>
-          <Route path="/" element={<HomeScreen />} />
-          <Route path="/explore" element={<ExploreScreen />} />
-          <Route path="/account" element={<HomeScreen />} />
+          <Route path="/" element={<PrivateRoute />}>
+            <Route path="" element={<HomeScreen />} />
+            <Route path="explore" element={<ExploreScreen />} />
+            <Route path="account" element={<HomeScreen />} />
+          </Route>
         </Routes>
+
+        <NavigationBar />
         {modalOpenState && (
           <Modal>
             {modalComponentName === 'SENTENCE_WITH_WORD' ? (
@@ -54,7 +50,16 @@ export default function App() {
             ) : null}
           </Modal>
         )}
-        <NavigationBar />
+        {confirmModalState && (
+          <ConfirmModal
+            confirmButton={{
+              label: 'Confirm',
+              action: confirmModalAction
+                ? confirmModalAction
+                : () => console.log('do nothing hehe'),
+            }}
+          />
+        )}
       </Router>
     </>
   );

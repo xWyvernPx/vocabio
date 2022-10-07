@@ -8,9 +8,10 @@ import store from './redux/store/redux-store';
 import Loading from './_components/common/loading/Loading';
 import { ApolloClient, InMemoryCache, ApolloProvider } from '@apollo/client';
 const client = new ApolloClient({
-  uri: 'https://flyby-gateway.herokuapp.com/',
-
+  // uri: 'https://flyby-gateway.herokuapp.com/',
+  uri: 'http://localhost:5551/graphql',
   cache: new InMemoryCache(),
+  credentials: 'include',
 });
 
 root.render(

@@ -11,6 +11,8 @@ import {
   WarningButton,
 } from 'renderer/_components/common/button/PrimaryButton';
 import { openModal } from 'renderer/redux/slice/modalSlice';
+import Loading from 'renderer/_components/common/loading/Loading';
+import ConfirmModal from 'renderer/_components/common/modal/ConfirmModal';
 type Props = {};
 
 const Screen = styled.div`
@@ -62,20 +64,7 @@ const HomeScreen = (props: Props) => {
           onSwiper={(swiper) => setSwiperRef(swiper)}
           effect={'cards'}
           cardsEffect={{}}
-        >
-          <SwiperSlide vocab="123">
-            <VocabCard />
-          </SwiperSlide>
-          <SwiperSlide>
-            <VocabCard />
-          </SwiperSlide>
-          <SwiperSlide>
-            <VocabCard />
-          </SwiperSlide>
-          <SwiperSlide>
-            <VocabCard />
-          </SwiperSlide>
-        </Swiper>
+        ></Swiper>
       </CardSlider>
       <ActionButtons>
         <PrimaryOutlineButton

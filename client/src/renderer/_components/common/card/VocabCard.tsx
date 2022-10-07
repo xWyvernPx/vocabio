@@ -1,7 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
-
-type Props = {};
+interface WordShort {
+  name?: string;
+  desc?: string;
+  phonetics: [
+    {
+      text?: string;
+      audio?: string;
+    }
+  ];
+}
+type Props = {
+  word: WordShort;
+};
 const CardWrapper = styled.div`
   width: 80%;
   background-color: transparent;
@@ -31,6 +42,8 @@ const CardInner = styled.div`
 const CardFront = styled.div`
   position: absolute;
   border-radius: 20px;
+  box-sizing: border-box;
+  padding: 5rem;
   width: 100%;
   height: 100%;
   -webkit-backface-visibility: hidden;
@@ -44,6 +57,8 @@ const CardFront = styled.div`
 const CardBack = styled.div`
   border-radius: 20px;
   position: absolute;
+  box-sizing: border-box;
+  padding: 5rem;
   width: 100%;
   height: 100%;
   -webkit-backface-visibility: hidden;
@@ -55,7 +70,7 @@ const CardBack = styled.div`
   justify-content: center;
   align-items: center;
 `;
-const VocabCard = (props: Props) => {
+const VocabCard = ({ word }: Props) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   return (
@@ -65,12 +80,12 @@ const VocabCard = (props: Props) => {
     >
       <CardInner className="card-inner">
         <CardFront>
-          <h1>Word</h1>
-          <h1>pronounce</h1>
+          <h1>{word?.name}</h1>
+          {/* <h1>pronounce</h1> */}
         </CardFront>
         <CardBack>
           {' '}
-          <h1>Definition</h1>
+          <h1>{word?.desc}</h1>
         </CardBack>
       </CardInner>
     </CardWrapper>

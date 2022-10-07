@@ -3,7 +3,8 @@ import React from 'react';
 import styled from 'styled-components';
 import { PrimaryButton } from '../common/button/PrimaryButton';
 import { TextField } from './field/TextField';
-
+import { useForm } from 'react-hook-form';
+import useAuth from 'renderer/_hooks/useAuth';
 const LoginFormWrapper = styled.form`
   display: flex;
   flex-direction: column;
@@ -16,15 +17,21 @@ const FormTitle = styled.h1`
 `;
 const Span = styled.span``;
 const LoginForm = ({ changeFormHandle }: { changeFormHandle: Function }) => {
+  const { handleSubmit, register } = useForm();
+  const { login } = useAuth();
   return (
-    <LoginFormWrapper>
+    <LoginFormWrapper
+      onSubmit={handleSubmit((value) => {
+        login(value.username, value.password);
+      })}
+    >
       <FormTitle>Welcome, login to continue</FormTitle>
       <TextField>
-        <input type="text" placeholder=" " />
+        <input {...register('username')} type="text" placeholder=" " />
         <label htmlFor="">Username</label>
       </TextField>
       <TextField>
-        <input type="password" placeholder=" " />
+        <input {...register('password')} type="password" placeholder=" " />
         <label htmlFor="">Password</label>
       </TextField>
       <PrimaryButton type="submit">Login</PrimaryButton>
