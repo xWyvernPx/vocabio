@@ -3,19 +3,20 @@ const { Types } = require("mongoose");
 const deckSchema = new mongoose.Schema(
   {
     account: {
-      type: mongoose.Types.ObjectId,
+      type: Types.ObjectId,
+      ref: "account",
     },
-    learned: [mongoose.Types.ObjectId],
+    learned: [String],
     learning: [
       {
-        word: mongoose.Types.ObjectId,
+        word: String,
         reviewLevel: Number,
         nextReview: Date,
       },
     ],
   },
   {
-    timestamps,
+    timestamps: true,
   }
 );
 

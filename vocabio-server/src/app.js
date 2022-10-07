@@ -3,7 +3,6 @@ const helmet = require("helmet");
 const cors = require("cors");
 const app = express();
 const passport = require("passport");
-const cookieSession = require("cookie-session");
 const expressSession = require("express-session");
 const Router = require("./route/index.route");
 require("./middleware/passport");
@@ -18,7 +17,12 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(cors());
+app.use(
+  cors({
+    credentials: true,
+    origin: "http://localhost:1212",
+  })
+);
 app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());

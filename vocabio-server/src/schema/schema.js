@@ -11,10 +11,15 @@ const typeDefs = gql`
     read: String
     file: String
   }
+  type WordPhonetic {
+    text: String
+    audio: String
+  }
   type Word {
     _id: ID
     name: String
     desc: String
+    phonetics: [WordPhonetic]
     lexicalCategory: String
     pronunciation: WordPronunciation
   }
@@ -34,15 +39,18 @@ const typeDefs = gql`
     accounts: [Account]
     hello: String
     me: Account
+    login(username: String, password: String): Account
+    learningWords: [Word]
+    suggestLearningWords: [Word]
   }
   type Mutation {
+    addWordKnownList(word: String): Boolean
     register(
       username: String
       password: String
       email: String
       avatar: String
     ): Account
-    login(username: String, password: String): Account
   }
 `;
 module.exports = typeDefs;

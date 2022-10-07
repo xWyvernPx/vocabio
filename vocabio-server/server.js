@@ -33,9 +33,10 @@ const accountModel = require("./src/model/account.model");
     ],
     context: async (expressContext) => {
       const AUTH_COOKIE_NAME = "sid";
-      const authCookie = expressContext.req.headers.cookie
-        .split(";")
-        .find((cookie) => cookie.includes(AUTH_COOKIE_NAME));
+      const cookies = expressContext.req.headers.cookie;
+      const authCookie = cookies
+        ? cookies.split(";").find((cookie) => cookie.includes(AUTH_COOKIE_NAME))
+        : null;
       if (authCookie) {
         const cookieToken = authCookie.split("=")[1];
         // console.log(cookieToken);
@@ -50,7 +51,13 @@ const accountModel = require("./src/model/account.model");
     },
   });
   await apolloServer.start();
-  apolloServer.applyMiddleware({ app });
+  apolloServer.applyMiddleware({
+    app,
+    cors: {
+      credentials: true,
+      origin: "http://localhost:1212",
+    },
+  });
   mongoose
     .connect("mongodb://127.0.0.1:27017/", { dbName: "vocabio" })
     .then(() => {
