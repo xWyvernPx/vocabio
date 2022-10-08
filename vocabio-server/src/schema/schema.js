@@ -28,6 +28,7 @@ const typeDefs = gql`
     wordInfomation: Word
     reviewLevel: Int
     nextReview: Date
+    lastReview: Date
   }
   type Deck {
     account: String
@@ -40,11 +41,16 @@ const typeDefs = gql`
     hello: String
     me: Account
     login(username: String, password: String): Account
-    learningWords: [Word]
+    learningWords: [WordInDeck]
     suggestLearningWords: [Word]
   }
   type Mutation {
     addWordKnownList(word: String): Boolean
+    TODO: String
+    addWordToLearningList(word: String): Date
+    reviewWordUpLevel(word: String): Boolean
+    reviewWordKeepLevel(word: String): Boolean
+
     register(
       username: String
       password: String

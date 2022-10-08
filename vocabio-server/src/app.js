@@ -5,7 +5,10 @@ const app = express();
 const passport = require("passport");
 const expressSession = require("express-session");
 const Router = require("./route/index.route");
+const reviewLevelModel = require("./model/reviewLevel.model");
+const levels = require("./helper/mockLevelData");
 require("./middleware/passport");
+
 app.use(
   expressSession({
     secret: "key",
@@ -26,6 +29,7 @@ app.use(
 app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
 Router(app);
 
 module.exports = app;

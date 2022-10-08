@@ -12,6 +12,7 @@ const deckSchema = new mongoose.Schema(
         word: String,
         reviewLevel: Number,
         nextReview: Date,
+        lastReview: Date,
       },
     ],
   },

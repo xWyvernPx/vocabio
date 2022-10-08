@@ -43,6 +43,7 @@ const resolvers = {
             learned: [],
             learning: [],
           });
+        deck?.learning.filter((wordInLearningDeck) => {});
         return deck?.learning;
       } else {
         return [];
@@ -98,6 +99,35 @@ const resolvers = {
   },
 
   Mutation: {
+    addWordToLearningList: async (_, { word }, { req, res }) => {
+      const date = new Date();
+      date.setDate(date.getDate() + 3);
+      const userId = req?.user?._id;
+      if (userId) {
+        let deck = await deckModel.findOne({ account: userId });
+        if (!deck)
+          deck = await deckModel.create({
+            account: userId,
+            learned: [],
+            learning: [],
+          });
+        const isLeared =
+          deck.learned.includes(word) ||
+          deck.learning.some((wordInDeck) => wordInDeck.word === word);
+        if (!isLeared) {
+          deck.learning.push({
+            word: word,
+            reviewLevel: 1,
+            nextReview: new Date(),
+          });
+          const updateResult = await deckModel.updateOne(
+            { _id: deck._id },
+            deck
+          );
+          if (updateResult.modifiedCount > 0) return true;
+        } else return false;
+      }
+    },
     addWordKnownList: async (parent, { word }, { req, res }) => {
       const userId = req?.user?._id;
       if (userId) {

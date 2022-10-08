@@ -12,7 +12,10 @@ import styled from 'styled-components';
 import { gql, useApolloClient } from '@apollo/client';
 import Loading from 'renderer/_components/common/loading/Loading';
 import { confirmAlert } from 'react-confirm-alert';
-import { openConfirmModal } from 'renderer/redux/slice/confirmModalSlice';
+import {
+  closeConfirmModal,
+  openConfirmModal,
+} from 'renderer/redux/slice/confirmModalSlice';
 type Props = {};
 const SUGGEST_NEW_WORDS_QUERY = gql`
   query {
@@ -37,7 +40,8 @@ const ExploreScreen = (props: Props) => {
   const client = useApolloClient();
   const [newWords, setNewWords] = useState<any>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [currentWord, setCurrentWord] = useState<string | any>(() => '');
+  const [currentSlide, setCurrentSlide] = useState<number | any>(0);
+
   useEffect(() => {
     client
       .query({ query: SUGGEST_NEW_WORDS_QUERY, fetchPolicy: 'no-cache' })
@@ -51,7 +55,30 @@ const ExploreScreen = (props: Props) => {
   useEffect(() => {
     console.log(newWords);
   }, [newWords]);
+  useEffect(() => {
+    if (swiperRef)
+      window.addEventListener('keydown', (e: KeyboardEvent) => {
+        switch (e.code) {
+          case 'ArrowRight':
+            swiperRef.slideNext();
+            break;
+          case 'ArrowLeft':
+            swiperRef.slidePrev();
+            break;
+          case 'ArrowUp':
+            break;
+          case 'ArrowDown':
+            break;
+        }
+      });
+    return () => {
+      window.removeEventListener('keydown', () => {});
+    };
+  }, [swiperRef]);
   const alreadyKnownClickHandler = useCallback(() => {
+    console.log(currentSlide);
+    const currentWord = swiperRef.slides[currentSlide].getAttribute('vocab');
+    console.log(currentWord);
     dispatch(
       openConfirmModal({
         content: 'Mark this word as known',
@@ -70,11 +97,12 @@ const ExploreScreen = (props: Props) => {
             setNewWords(
               newWords.filter((word: any) => word.name != currentWord)
             );
+            dispatch(closeConfirmModal());
           }
         },
       })
     );
-  }, []);
+  }, [swiperRef, currentSlide]);
   return (
     <Screen>
       <WelcomeSpan>Exploring new words to learn</WelcomeSpan>
@@ -84,9 +112,7 @@ const ExploreScreen = (props: Props) => {
           spaceBetween={50}
           slidesPerView={1}
           // autoHeight={true}
-          onSlideChange={(e) =>
-            setCurrentWord(e.slides[e.activeIndex].getAttribute('vocab'))
-          }
+          onSlideChange={(e) => setCurrentSlide(e.activeIndex)}
           onSwiper={(swiper) => setSwiperRef(swiper)}
           effect={'cards'}
         >

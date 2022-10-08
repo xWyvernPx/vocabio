@@ -15,13 +15,13 @@ const client = new ApolloClient({
 });
 
 root.render(
-  <ApolloProvider client={client}>
-    <Provider store={store}>
-      <Suspense fallback={<Loading />}>
+  <Suspense fallback={<Loading />}>
+    <ApolloProvider client={client}>
+      <Provider store={store}>
         <App />
-      </Suspense>
-    </Provider>
-  </ApolloProvider>
+      </Provider>
+    </ApolloProvider>
+  </Suspense>
 );
 
 // calling IPC exposed from preload script

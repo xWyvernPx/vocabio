@@ -15,7 +15,8 @@ const {
 } = require("apollo-server-core");
 const { makeExecutableSchema } = require("@graphql-tools/schema");
 const accountModel = require("./src/model/account.model");
-
+const reviewLevelModel = require("./src/model/reviewLevel.model");
+const levels = require("./src/helper/mockLevelData");
 (async function startServer() {
   const httpServer = createServer(app);
   const apolloServer = new ApolloServer({
@@ -43,7 +44,9 @@ const accountModel = require("./src/model/account.model");
         if (cookieToken) {
           const parsedToken = verifyToken(cookieToken);
           //prototype token { id : string,iat : number }
-          const account = await accountModel.findOne({ _id: parsedToken?.id });
+          const account = await accountModel.findOne({
+            _id: parsedToken?.id,
+          });
           expressContext.req.user = account;
         }
       }
@@ -62,6 +65,11 @@ const accountModel = require("./src/model/account.model");
     .connect("mongodb://127.0.0.1:27017/", { dbName: "vocabio" })
     .then(() => {
       console.log("mongodb connection established");
+      levels.map(async (level) => {
+        await reviewLevelModel.updateOne({ level: level.level }, level, {
+          upsert: true,
+        });
+      });
       httpServer.listen(5551, () => {
         console.log(
           "app is listening at http://localhost:5551" + apolloServer.graphqlPath
