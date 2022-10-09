@@ -23,7 +23,10 @@ const SentenceWithWordForm = React.lazy(
   () => import('./_components/form/SentenceWithWordForm')
 );
 const HomeScreen = React.lazy(() => import('./screens/home/HomeScreen'));
-
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from 'react-toastify';
+import AccountScreen from './screens/account/AccountScreen';
+import WordDetailModal from './screens/home/WordDetailModal';
 export default function App() {
   const modalOpenState = useSelector(modalStateSelector);
   const modalComponentName = useSelector(modalComponentNameSelector);
@@ -38,7 +41,7 @@ export default function App() {
           <Route path="/" element={<PrivateRoute />}>
             <Route path="" element={<HomeScreen />} />
             <Route path="explore" element={<ExploreScreen />} />
-            <Route path="account" element={<HomeScreen />} />
+            <Route path="account" element={<AccountScreen />} />
           </Route>
         </Routes>
 
@@ -47,6 +50,8 @@ export default function App() {
           <Modal>
             {modalComponentName === 'SENTENCE_WITH_WORD' ? (
               <SentenceWithWordForm />
+            ) : modalComponentName === 'WORD_DETAIL' ? (
+              <WordDetailModal />
             ) : null}
           </Modal>
         )}
@@ -60,6 +65,7 @@ export default function App() {
             }}
           />
         )}
+        <ToastContainer />
       </Router>
     </>
   );

@@ -9,10 +9,8 @@ const deckSchema = new mongoose.Schema(
     learned: [String],
     learning: [
       {
-        word: String,
-        reviewLevel: Number,
-        nextReview: Date,
-        lastReview: Date,
+        type: Types.ObjectId,
+        ref: "wordindeck",
       },
     ],
   },

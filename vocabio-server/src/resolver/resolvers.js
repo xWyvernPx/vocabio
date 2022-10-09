@@ -6,6 +6,8 @@ const deckModel = require("../model/deck.model");
 const wordApiClient = require("../helper/wordapi.client");
 const wordLibModel = require("../model/wordlib.model");
 const { wordDictClient } = require("../helper/worddict.client");
+const wordindeckModel = require("../model/wordindeck.model");
+const reviewLevelModel = require("../model/reviewLevel.model");
 const resolvers = {
   Query: {
     hello: (parent, args, context) => {
@@ -34,7 +36,7 @@ const resolvers = {
           { account: userId },
           {},
           {
-            populate: ["account"],
+            populate: ["account", "learning"],
           }
         );
         if (!deck)
@@ -43,8 +45,12 @@ const resolvers = {
             learned: [],
             learning: [],
           });
-        deck?.learning.filter((wordInLearningDeck) => {});
-        return deck?.learning;
+        return deck?.learning.filter((wordInLearningDeck) => {
+          const nextReview = wordInLearningDeck.nextReview;
+          const now = new Date();
+          return nextReview <= now;
+        });
+        //  deck?.learning;
       } else {
         return [];
       }
@@ -96,36 +102,193 @@ const resolvers = {
       }
       return words;
     },
-  },
-
-  Mutation: {
-    addWordToLearningList: async (_, { word }, { req, res }) => {
-      const date = new Date();
-      date.setDate(date.getDate() + 3);
-      const userId = req?.user?._id;
-      if (userId) {
-        let deck = await deckModel.findOne({ account: userId });
+    reviewLevels: async () => {
+      return await reviewLevelModel.find();
+    },
+    getDetailWord: async (_, { word }, { req, res }) => {
+      const result = await wordDictClient
+        .get(`/${word}`)
+        .then((result) => result.data[0]);
+      console.log(result);
+      return result;
+    },
+    getKnownWords: async (_, args, { req, res }) => {
+      if (req.user) {
+        const userId = req?.user?._id;
+        console.log(userId);
+        let deck = await deckModel.findOne(
+          { account: userId },
+          {},
+          {
+            populate: ["account", "learning"],
+          }
+        );
         if (!deck)
           deck = await deckModel.create({
             account: userId,
             learned: [],
             learning: [],
           });
+        return deck?.learned;
+        //  deck?.learning;
+      } else {
+        return [];
+      }
+    },
+    allLearningWords: async (_, args, { req, res }) => {
+      if (req.user) {
+        const userId = req?.user?._id;
+        console.log(userId);
+        let deck = await deckModel.findOne(
+          { account: userId },
+          {},
+          {
+            populate: ["account", "learning"],
+          }
+        );
+        if (!deck)
+          deck = await deckModel.create({
+            account: userId,
+            learned: [],
+            learning: [],
+          });
+        return deck?.learning;
+        //  deck?.learning;
+      } else {
+        return [];
+      }
+    },
+  },
+
+  Mutation: {
+    reviewWordUpLevel: async (_, { word }, { req, res }) => {
+      const userId = req?.user?._id;
+      if (userId) {
+        let deck = await deckModel
+          .findOne({ account: userId })
+          .populate(["learning"]);
+        if (!deck)
+          deck = await deckModel.create({
+            account: userId,
+            learned: [],
+            learning: [],
+          });
+
+        const isInDeck = deck.learning.some(
+          (deckItem) => deckItem.word === word
+        );
+
+        if (!isInDeck) return false;
+
+        const wordInDeckId = deck.learning.find(
+          (deckItem) => deckItem.word === word
+        )._id;
+        const MAX_REVIEW_LEVEL = 8;
+        const wordInDeck = await wordindeckModel.findOne({ _id: wordInDeckId });
+        const currentLevel = wordInDeck.reviewLevel;
+        if (currentLevel >= MAX_REVIEW_LEVEL) {
+          await deckModel.updateOne(
+            { account: userId },
+            { $pull: { learning: wordInDeckId }, $push: { learned: word } }
+          );
+          return true;
+        }
+        const nextLevel = await reviewLevelModel.findOne({
+          level: currentLevel + 1,
+        });
+        wordInDeck.reviewLevel = nextLevel.level;
+        const nextReviewDate = new Date();
+        nextReviewDate.setDate(
+          new Date().getDate() + nextLevel.reviewAfterPeriod
+        );
+        console.log(nextReviewDate);
+        wordInDeck.nextReview = nextReviewDate;
+        console.log(wordInDeck);
+        await wordInDeck.save();
+        return true;
+      }
+      return false;
+    },
+    reviewWordKeepLevel: async (_, { word }, { req, res }) => {
+      const userId = req?.user?._id;
+      if (userId) {
+        let deck = await deckModel
+          .findOne({ account: userId })
+          .populate(["learning"]);
+        if (!deck)
+          deck = await deckModel.create({
+            account: userId,
+            learned: [],
+            learning: [],
+          });
+
+        const isInDeck = deck.learning.some(
+          (deckItem) => deckItem.word === word
+        );
+
+        if (!isInDeck) return false;
+
+        const wordInDeckId = deck.learning.find(
+          (deckItem) => deckItem.word === word
+        )._id;
+
+        const wordInDeck = await wordindeckModel.findOne({ _id: wordInDeckId });
+
+        const currenLevel = await reviewLevelModel.findOne({
+          level: wordInDeck.reviewLevel,
+        });
+        const nextReviewDate = new Date();
+        nextReviewDate.setDate(
+          new Date().getDate() + currenLevel.reviewAfterPeriod
+        );
+        console.log(nextReviewDate);
+        wordInDeck.nextReview = nextReviewDate;
+        console.log(wordInDeck);
+        await wordInDeck.save();
+        return true;
+      }
+      return false;
+    },
+    addWordToLearningList: async (_, { word }, { req, res }) => {
+      const userId = req?.user?._id;
+      if (userId) {
+        let deck = await deckModel
+          .findOne({ account: userId })
+          .populate(["account", "learning"]);
+        if (!deck)
+          deck = await deckModel.create({
+            account: userId,
+            learned: [],
+            learning: [],
+          });
+
         const isLeared =
           deck.learned.includes(word) ||
           deck.learning.some((wordInDeck) => wordInDeck.word === word);
         if (!isLeared) {
-          deck.learning.push({
+          //   deck.learning.push({
+          //     word: word,
+          //     reviewLevel: 1,
+          //     nextReview: new Date(),
+          //   });
+          //   const updateResult = await deckModel.updateOne(
+          //     { _id: deck._id },
+          //     deck
+          //   );
+          //   if (updateResult.modifiedCount > 0) return true;
+          const newWord = await wordindeckModel.create({
             word: word,
             reviewLevel: 1,
             nextReview: new Date(),
           });
-          const updateResult = await deckModel.updateOne(
-            { _id: deck._id },
-            deck
+          const result = await deckModel.updateOne(
+            { account: userId },
+            { $push: { learning: newWord._id } }
           );
-          if (updateResult.modifiedCount > 0) return true;
-        } else return false;
+          if (result.modifiedCount > 0) return true;
+        } else {
+          return false;
+        }
       }
     },
     addWordKnownList: async (parent, { word }, { req, res }) => {

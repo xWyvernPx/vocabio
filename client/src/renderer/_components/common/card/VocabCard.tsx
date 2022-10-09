@@ -11,7 +11,7 @@ interface WordShort {
   ];
 }
 type Props = {
-  word: WordShort;
+  word: any;
 };
 const CardWrapper = styled.div`
   width: 80%;
@@ -80,7 +80,7 @@ const VocabCard = ({ word }: Props) => {
     >
       <CardInner className="card-inner">
         <CardFront>
-          <h1>{word?.name}</h1>
+          <h1>{word?.name || word?.word}</h1>
           {/* <h1>pronounce</h1> */}
         </CardFront>
         <CardBack>

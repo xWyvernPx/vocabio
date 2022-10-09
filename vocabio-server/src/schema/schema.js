@@ -11,6 +11,22 @@ const typeDefs = gql`
     read: String
     file: String
   }
+  type WordDefinition {
+    definition: String
+    example: String
+    synonyms: [String]
+  }
+  type WordMeaning {
+    partOfSpeech: String
+    definitions: [WordDefinition]
+  }
+  type WordInDetail {
+    word: String
+    phonetic: String
+    phonetics: [WordPhonetic]
+    origin: String
+    meanings: [WordMeaning]
+  }
   type WordPhonetic {
     text: String
     audio: String
@@ -24,11 +40,10 @@ const typeDefs = gql`
     pronunciation: WordPronunciation
   }
   type WordInDeck {
-    word: [ID]
+    word: ID
     wordInfomation: Word
     reviewLevel: Int
     nextReview: Date
-    lastReview: Date
   }
   type Deck {
     account: String
@@ -36,20 +51,28 @@ const typeDefs = gql`
     learned: [ID]
     learning: [WordInDeck]
   }
+  type ReviewLevel {
+    level: Int
+    reviewAfterPeriod: Int
+  }
   type Query {
     accounts: [Account]
     hello: String
     me: Account
     login(username: String, password: String): Account
     learningWords: [WordInDeck]
+    allLearningWords: [WordInDeck]
     suggestLearningWords: [Word]
+    getDetailWord(word: String): WordInDetail
+    reviewLevels: [ReviewLevel]
+    getKnownWords: [String]
   }
   type Mutation {
     addWordKnownList(word: String): Boolean
-    TODO: String
     addWordToLearningList(word: String): Date
     reviewWordUpLevel(word: String): Boolean
     reviewWordKeepLevel(word: String): Boolean
+    TODO: String
 
     register(
       username: String

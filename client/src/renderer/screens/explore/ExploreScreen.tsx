@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { openModal } from 'renderer/redux/slice/modalSlice';
 import {
@@ -16,6 +16,7 @@ import {
   closeConfirmModal,
   openConfirmModal,
 } from 'renderer/redux/slice/confirmModalSlice';
+import { toast } from 'react-toastify';
 type Props = {};
 const SUGGEST_NEW_WORDS_QUERY = gql`
   query {
@@ -36,12 +37,15 @@ const ADD_WORD_KNOWN_MUTATION = gql`
 `;
 const ExploreScreen = (props: Props) => {
   const [swiperRef, setSwiperRef] = useState<any>();
+  const [currentSlide, setCurrentSlide] = useState<number | any>(0);
   const dispatch = useDispatch();
   const client = useApolloClient();
   const [newWords, setNewWords] = useState<any>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [currentSlide, setCurrentSlide] = useState<number | any>(0);
-
+  const currentWord = useMemo(
+    () => newWords?.[currentSlide]?.name,
+    [currentSlide, swiperRef, newWords]
+  );
   useEffect(() => {
     client
       .query({ query: SUGGEST_NEW_WORDS_QUERY, fetchPolicy: 'no-cache' })
@@ -97,12 +101,47 @@ const ExploreScreen = (props: Props) => {
             setNewWords(
               newWords.filter((word: any) => word.name != currentWord)
             );
+            toast.success('Added word to known list ');
+            dispatch(closeConfirmModal());
+          } else {
+            toast.error('Added word to known list failed');
             dispatch(closeConfirmModal());
           }
         },
       })
     );
-  }, [swiperRef, currentSlide]);
+  }, [swiperRef, currentSlide, newWords]);
+  const learnThisWordHandler = useCallback(() => {
+    const currentWord = swiperRef.slides[currentSlide].getAttribute('vocab');
+    const ADD_WORD_TO_LEARN_MUTATION = gql`
+      mutation ($word: String) {
+        addWordToLearningList(word: $word)
+      }
+    `;
+    dispatch(
+      openConfirmModal({
+        content: 'Learn this word.',
+        confirmAction: async () => {
+          const result = await client
+            .mutate({
+              mutation: ADD_WORD_TO_LEARN_MUTATION,
+              variables: { word: currentWord },
+            })
+            .then((result) => result.data.addWordToLearningList);
+          if (result) {
+            setNewWords(
+              newWords.filter((word: any) => word.name != currentWord)
+            );
+            toast.success('Added word to learning list');
+            dispatch(closeConfirmModal());
+          } else {
+            toast.error('Added word to learning list failed');
+            dispatch(closeConfirmModal());
+          }
+        },
+      })
+    );
+  }, [swiperRef, currentSlide, newWords]);
   return (
     <Screen>
       <WelcomeSpan>Exploring new words to learn</WelcomeSpan>
@@ -154,12 +193,15 @@ const ExploreScreen = (props: Props) => {
             dispatch(
               openModal({
                 componentName: 'WORD_DETAIL',
-                payload: 'stuck',
+                payload: { word: currentWord },
               })
             )
           }
         >
           Learn more
+        </PrimaryOutlineButton>
+        <PrimaryOutlineButton onClick={learnThisWordHandler}>
+          Learn this word
         </PrimaryOutlineButton>
         <SuccessButton onClick={() => alreadyKnownClickHandler()}>
           Already known
