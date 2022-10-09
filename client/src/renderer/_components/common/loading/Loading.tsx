@@ -4,7 +4,16 @@ import styled from 'styled-components';
 type Props = {};
 
 const Wrapper = styled.div`
+  position: fixed;
+  background-color: rgba(240, 242, 250, 0.5);
+  z-index: 250;
+  inset: 0;
+  /* top: 50%; */
+  /* left: 50%; */
+  display: grid;
+  place-items: center;
   .dashed-loading {
+    transform: translate(-25px, -25px);
     position: relative;
     height: 50px;
   }

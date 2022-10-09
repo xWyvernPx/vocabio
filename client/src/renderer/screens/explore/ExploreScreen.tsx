@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { openModal } from 'renderer/redux/slice/modalSlice';
 import {
@@ -9,12 +9,139 @@ import {
 import VocabCard from 'renderer/_components/common/card/VocabCard';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import styled from 'styled-components';
-
+import { gql, useApolloClient } from '@apollo/client';
+import Loading from 'renderer/_components/common/loading/Loading';
+import { confirmAlert } from 'react-confirm-alert';
+import {
+  closeConfirmModal,
+  openConfirmModal,
+} from 'renderer/redux/slice/confirmModalSlice';
+import { toast } from 'react-toastify';
 type Props = {};
-
+const SUGGEST_NEW_WORDS_QUERY = gql`
+  query {
+    suggestLearningWords {
+      name
+      desc
+      phonetics {
+        text
+        audio
+      }
+    }
+  }
+`;
+const ADD_WORD_KNOWN_MUTATION = gql`
+  mutation ($word: String) {
+    addWordKnownList(word: $word)
+  }
+`;
 const ExploreScreen = (props: Props) => {
   const [swiperRef, setSwiperRef] = useState<any>();
+  const [currentSlide, setCurrentSlide] = useState<number | any>(0);
   const dispatch = useDispatch();
+  const client = useApolloClient();
+  const [newWords, setNewWords] = useState<any>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const currentWord = useMemo(
+    () => newWords?.[currentSlide]?.name,
+    [currentSlide, swiperRef, newWords]
+  );
+  useEffect(() => {
+    client
+      .query({ query: SUGGEST_NEW_WORDS_QUERY, fetchPolicy: 'no-cache' })
+      .then((result) => {
+        if (result.loading === false) {
+          setNewWords([...newWords, ...result.data.suggestLearningWords]);
+          setIsLoading(false);
+        }
+      });
+  }, []);
+  useEffect(() => {
+    console.log(newWords);
+  }, [newWords]);
+  useEffect(() => {
+    if (swiperRef)
+      window.addEventListener('keydown', (e: KeyboardEvent) => {
+        switch (e.code) {
+          case 'ArrowRight':
+            swiperRef.slideNext();
+            break;
+          case 'ArrowLeft':
+            swiperRef.slidePrev();
+            break;
+          case 'ArrowUp':
+            break;
+          case 'ArrowDown':
+            break;
+        }
+      });
+    return () => {
+      window.removeEventListener('keydown', () => {});
+    };
+  }, [swiperRef]);
+  const alreadyKnownClickHandler = useCallback(() => {
+    console.log(currentSlide);
+    const currentWord = swiperRef.slides[currentSlide].getAttribute('vocab');
+    console.log(currentWord);
+    dispatch(
+      openConfirmModal({
+        content: 'Mark this word as known',
+        confirmAction: async () => {
+          const result = await client
+            .mutate({
+              mutation: gql`
+                mutation ($word: String) {
+                  addWordKnownList(word: $word)
+                }
+              `,
+              variables: { word: currentWord },
+            })
+            .then((result) => result.data.addWordKnownList);
+          if (result) {
+            setNewWords(
+              newWords.filter((word: any) => word.name != currentWord)
+            );
+            toast.success('Added word to known list ');
+            dispatch(closeConfirmModal());
+          } else {
+            toast.error('Added word to known list failed');
+            dispatch(closeConfirmModal());
+          }
+        },
+      })
+    );
+  }, [swiperRef, currentSlide, newWords]);
+  const learnThisWordHandler = useCallback(() => {
+    const currentWord = swiperRef.slides[currentSlide].getAttribute('vocab');
+    const ADD_WORD_TO_LEARN_MUTATION = gql`
+      mutation ($word: String) {
+        addWordToLearningList(word: $word)
+      }
+    `;
+    dispatch(
+      openConfirmModal({
+        content: 'Learn this word.',
+        confirmAction: async () => {
+          const result = await client
+            .mutate({
+              mutation: ADD_WORD_TO_LEARN_MUTATION,
+              variables: { word: currentWord },
+            })
+            .then((result) => result.data.addWordToLearningList);
+          if (result) {
+            setNewWords(
+              newWords.filter((word: any) => word.name != currentWord)
+            );
+            toast.success('Added word to learning list');
+            dispatch(closeConfirmModal());
+          } else {
+            toast.error('Added word to learning list failed');
+            dispatch(closeConfirmModal());
+          }
+        },
+      })
+    );
+  }, [swiperRef, currentSlide, newWords]);
   return (
     <Screen>
       <WelcomeSpan>Exploring new words to learn</WelcomeSpan>
@@ -23,23 +150,40 @@ const ExploreScreen = (props: Props) => {
         <Swiper
           spaceBetween={50}
           slidesPerView={1}
-          autoHeight={true}
-          onSlideChange={(e) => console.log()}
+          // autoHeight={true}
+          onSlideChange={(e) => setCurrentSlide(e.activeIndex)}
           onSwiper={(swiper) => setSwiperRef(swiper)}
           effect={'cards'}
-          cardsEffect={{}}
         >
-          <SwiperSlide vocab="123">
-            <VocabCard />
-          </SwiperSlide>
+          {newWords?.map((word: any) => (
+            <SwiperSlide vocab={word?.name}>
+              <VocabCard word={word} key={word.name} />
+            </SwiperSlide>
+          ))}
           <SwiperSlide>
-            <VocabCard />
-          </SwiperSlide>
-          <SwiperSlide>
-            <VocabCard />
-          </SwiperSlide>
-          <SwiperSlide>
-            <VocabCard />
+            <BlankCardWrapper>
+              <button
+                onClick={() => {
+                  setIsLoading(true);
+                  client
+                    .query({
+                      query: SUGGEST_NEW_WORDS_QUERY,
+                      fetchPolicy: 'no-cache',
+                    })
+                    .then((result) => {
+                      if (result.loading === false) {
+                        setNewWords([
+                          ...newWords,
+                          ...result.data.suggestLearningWords,
+                        ]);
+                        setIsLoading(false);
+                      }
+                    });
+                }}
+              >
+                more
+              </button>
+            </BlankCardWrapper>
           </SwiperSlide>
         </Swiper>
       </CardSlider>
@@ -49,29 +193,31 @@ const ExploreScreen = (props: Props) => {
             dispatch(
               openModal({
                 componentName: 'WORD_DETAIL',
-                payload: 'stuck',
+                payload: { word: currentWord },
               })
             )
           }
         >
           Learn more
         </PrimaryOutlineButton>
-        <SuccessButton
-          onClick={() => {
-            dispatch(
-              openModal({
-                componentName: 'SENTENCE_WITH_WORD',
-                payload: '',
-              })
-            );
-          }}
-        >
+        <PrimaryOutlineButton onClick={learnThisWordHandler}>
+          Learn this word
+        </PrimaryOutlineButton>
+        <SuccessButton onClick={() => alreadyKnownClickHandler()}>
           Already known
         </SuccessButton>
       </ActionButtons>
+      {isLoading && <Loading />}
     </Screen>
   );
 };
+const BlankCardWrapper = styled.div`
+  background: transparent;
+  width: 100%;
+  height: 30rem;
+  display: grid;
+  place-items: center;
+`;
 const Screen = styled.div`
   width: 100%;
   height: 100%;

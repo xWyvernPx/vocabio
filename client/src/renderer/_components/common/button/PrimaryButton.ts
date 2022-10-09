@@ -59,3 +59,13 @@ export const WarningButton = styled.button`
   width: ${(props: ButtonProps) =>
     props.width ? props.width.toString() : 'auto'};
 `;
+export const DangerButton = styled.button`
+  background-color: var(--danger);
+  color: var(--white-color);
+
+  padding: 2rem 3rem;
+  font-size: 1.7rem;
+  line-height: 2.6rem;
+  width: ${(props: ButtonProps) =>
+    props.width ? props.width.toString() : 'auto'};
+`;

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import LoginForm from 'renderer/_components/form/LoginForm';
 import SignUpForm from 'renderer/_components/form/SignUpForm';
+import useAuth from 'renderer/_hooks/useAuth';
 
 // type Props = {};
 import styled from 'styled-components';
@@ -26,6 +27,9 @@ const LoginScreenWrapper = styled.div`
   justify-content: center;
   align-items: center;
   background-color: var(--white-color);
+
+  position: relative;
+  z-index: 100;
 `;
 
 export default LoginScreen;
