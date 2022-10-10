@@ -24,6 +24,7 @@ const resolvers = {
       if (isPasswordCorrect) {
         res.cookie(AUTH_COOKIE_NAME, signToken({ id: account._id }), {
           httpOnly: true,
+          secure: true,
         });
         return account;
       }
@@ -157,6 +158,18 @@ const resolvers = {
       } else {
         return [];
       }
+    },
+    logout: (_, args, { req, res }) => {
+      if (res) {
+        const AUTH_COOKIE_NAME = "sid";
+        res.cookie(AUTH_COOKIE_NAME, "", {
+          httpOnly: true,
+          secure: true,
+        });
+        return true;
+      }
+
+      return false;
     },
   },
 
@@ -322,6 +335,7 @@ const resolvers = {
         });
         res.cookie(AUTH_COOKIE_NAME, signToken({ id: account._id }), {
           httpOnly: true,
+          secure: true,
         });
         return account;
       } else return existedAccount;
