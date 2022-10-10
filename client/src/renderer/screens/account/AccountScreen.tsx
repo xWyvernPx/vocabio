@@ -1,6 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { gql, useQuery, useApolloClient } from '@apollo/client';
+import { PrimaryButton } from 'renderer/_components/common/button/PrimaryButton';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 type Props = {};
 const Screen = styled.div`
   width: 100%;
@@ -77,11 +80,16 @@ const GET_KNOWN_WORDS_QUERY = gql`
     getKnownWords
   }
 `;
+const LOGOUT_QUERY = gql`
+  query {
+    logout
+  }
+`;
 const AccountScreen = (props: Props) => {
   const { query } = useApolloClient();
   const [learningWords, setlearningWords] = useState<any>();
   const [knownWords, setKnownWords] = useState<any>();
-
+  const nav = useNavigate();
   useEffect(() => {
     (() =>
       query({
@@ -117,6 +125,21 @@ const AccountScreen = (props: Props) => {
             <span>{knownWords?.length}</span>
           </InformationProps>
         </InformationField>
+        <PrimaryButton
+          style={{ marginTop: '3rem' }}
+          onClick={() => {
+            query({ query: LOGOUT_QUERY })
+              .then((result) => result.data?.logout)
+              .then((result) => {
+                if (result) window.location.href = '/';
+                else {
+                  toast.error('logout failed');
+                }
+              });
+          }}
+        >
+          Logout
+        </PrimaryButton>
       </InformationArea>
     </Screen>
   );

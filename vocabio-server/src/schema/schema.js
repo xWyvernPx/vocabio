@@ -66,6 +66,7 @@ const typeDefs = gql`
     getDetailWord(word: String): WordInDetail
     reviewLevels: [ReviewLevel]
     getKnownWords: [String]
+    logout: Boolean
   }
   type Mutation {
     addWordKnownList(word: String): Boolean

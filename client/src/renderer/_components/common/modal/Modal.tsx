@@ -8,6 +8,7 @@ import {
 } from 'renderer/redux/slice/modalSlice';
 type Props = {};
 const ModalWrapper = styled.div`
+  padding-bottom: 3rem;
   position: fixed;
   left: 5rem;
   right: 5rem;
@@ -17,6 +18,14 @@ const ModalWrapper = styled.div`
   box-shadow: 0px 0px 10px 0px rgba(255, 255, 255, 0.5);
   border-radius: var(--radius);
   z-index: 50;
+  overflow-y: auto;
+  & {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 const CloseButton = styled.button`
   position: absolute;

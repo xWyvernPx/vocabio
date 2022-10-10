@@ -16,6 +16,10 @@
   font-size: 62.5%;
  }
  *{ color : var(--dark-color)}
+ ul{
+  margin :0;
+  padding: 0;
+ }
 body {
   margin: 0;
   position: relative;
